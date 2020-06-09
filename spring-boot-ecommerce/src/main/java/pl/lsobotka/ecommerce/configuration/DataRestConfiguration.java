@@ -5,6 +5,7 @@ import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.http.HttpMethod;
 import pl.lsobotka.ecommerce.model.Product;
+import pl.lsobotka.ecommerce.model.ProductCategory;
 
 @Configuration
 public class DataRestConfiguration implements RepositoryRestConfigurer {
@@ -25,5 +26,7 @@ public class DataRestConfiguration implements RepositoryRestConfigurer {
                 .forDomainType(Product.class)
                 .withItemExposure((model, httpMethods) -> httpMethods.disable(unsuportedActions))
                 .withCollectionExposure((model, httpMethods) -> httpMethods.disable(unsuportedActions));
+
+        config.exposeIdsFor(ProductCategory.class);
     }
 }
