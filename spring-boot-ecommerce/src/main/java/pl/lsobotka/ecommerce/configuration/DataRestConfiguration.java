@@ -7,26 +7,24 @@ import org.springframework.http.HttpMethod;
 import pl.lsobotka.ecommerce.model.Product;
 import pl.lsobotka.ecommerce.model.ProductCategory;
 
+import java.util.Arrays;
+
 @Configuration
 public class DataRestConfiguration implements RepositoryRestConfigurer {
 
+    private static HttpMethod[] unsuportedActions = {HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE};
+
     @Override
     public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config) {
+        Class[] classes = {Product.class, ProductCategory.class};
+        Arrays.stream(classes).forEach(clazz -> disableUnsuportedActions(config, clazz));
+        config.exposeIdsFor(classes);
+    }
 
-        HttpMethod[] unsuportedActions = {HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE};
-
-        // disable HTTP methods for Product model - read only
+    private void disableUnsuportedActions(RepositoryRestConfiguration config, Class clazz) {
         config.getExposureConfiguration()
-                .forDomainType(Product.class)
+                .forDomainType(clazz)
                 .withItemExposure((model, httpMethods) -> httpMethods.disable(unsuportedActions))
                 .withCollectionExposure((model, httpMethods) -> httpMethods.disable(unsuportedActions));
-
-        // disable HTTP methods for ProductCategory model - read only
-        config.getExposureConfiguration()
-                .forDomainType(Product.class)
-                .withItemExposure((model, httpMethods) -> httpMethods.disable(unsuportedActions))
-                .withCollectionExposure((model, httpMethods) -> httpMethods.disable(unsuportedActions));
-
-        config.exposeIdsFor(ProductCategory.class);
     }
 }
