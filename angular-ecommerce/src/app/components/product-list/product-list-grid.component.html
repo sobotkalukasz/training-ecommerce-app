@@ -10,10 +10,12 @@
                         <a href="#">
                             <h1>{{ product.name }}</h1>
                         </a>
-                        <h2>{{ product.description }}</h2>
                         <div class="price">{{ product.unitPrice| currency:'EUR'}}</div>
                         <a href="#" class="primary-btn">Add to cart</a>
                     </div>
+                </div>
+                <div *ngIf="products?.length == 0" class="alert alert-warning col-md-12" role="alert">
+                    No products found.
                 </div>
             </div>
         </div>
