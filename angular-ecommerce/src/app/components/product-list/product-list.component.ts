@@ -10,9 +10,16 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class ProductListComponent implements OnInit {
 
-  products: Product[];
-  currentCategoryId: number;
-  searchMode: boolean;
+  products: Product[] = [];
+  currentCategoryId: number = 1;
+  previousCategoryId: number = 1;
+  searchMode: boolean = false;
+
+  previousKeyword: string;
+
+  pageNumber: number = 1;
+  pageSize: number = 10;
+  totalElements: number = 0;
 
   constructor(private productService: ProductService, private route: ActivatedRoute) { }
 
@@ -22,25 +29,28 @@ export class ProductListComponent implements OnInit {
     });
   }
 
+  updatePageSize(selectedPageSize: number) {
+    this.pageSize = selectedPageSize;
+    this.pageNumber = 1;
+    this.listProducts();
+  }
+
   listProducts() {
-
     this.searchMode = this.route.snapshot.paramMap.has("keyword");
-
     if (this.searchMode) {
       this.handleSearchProduct();
     } else {
       this.handleListProducts();
     }
-
   }
+
   handleSearchProduct() {
     const keyword: string = this.route.snapshot.paramMap.get('keyword');
-
-    this.productService.searchProducts(keyword).subscribe(
-      data => {
-        this.products = data;
-      }
-    )
+    if (this.previousKeyword != keyword) {
+      this.previousKeyword = keyword;
+      this.pageNumber = 1;
+    }
+    this.productService.searchProductsPaginate(this.pageNumber - 1, this.pageSize, keyword).subscribe(this.processResult());
   }
 
   handleListProducts() {
@@ -52,11 +62,21 @@ export class ProductListComponent implements OnInit {
       this.currentCategoryId = 1;
     }
 
-    this.productService.getProductList(this.currentCategoryId).subscribe(
-      data => {
-        this.products = data;
-      }
-    )
+    if (this.previousCategoryId != this.currentCategoryId) {
+      this.previousCategoryId = this.currentCategoryId;
+      this.pageNumber = 1;
+    }
+
+    this.productService.getProductListPaginate(this.pageNumber - 1, this.pageSize, this.currentCategoryId).subscribe(this.processResult());
+  }
+
+  processResult() {
+    return data => {
+      this.products = data._embedded.products;
+      this.pageSize = data.page.size;
+      this.pageNumber = data.page.number + 1;
+      this.totalElements = data.page.totalElements;
+    };
   }
 
 }
