@@ -1,8 +1,6 @@
 import { Injectable, IterableDiffers } from '@angular/core';
 import { CartItem } from '../common/cart-item';
 import { Subject } from 'rxjs';
-import { ignoreElements } from 'rxjs/operators';
-import { identifierModuleUrl } from '@angular/compiler';
 
 @Injectable({
   providedIn: 'root'
@@ -15,6 +13,10 @@ export class CartService {
 
   constructor() { }
 
+  incrementQuantity(item: CartItem) {
+    this.addToCart(item);
+  }
+
   addToCart(item: CartItem) {
     let existingCartItem: CartItem = this.cartItems.find(cartItem => cartItem.id === item.id);
     if (this.existInCart(existingCartItem)) {
@@ -25,7 +27,7 @@ export class CartService {
     this.computeCartTotals();
   }
 
-  private computeCartTotals() {
+  computeCartTotals() {
     let tempTotalPrice: number = 0;
     let tempTotalQty: number = 0;
     for (let item of this.cartItems) {
@@ -34,6 +36,23 @@ export class CartService {
     }
     this.totalPrice.next(tempTotalPrice);
     this.totalQty.next(tempTotalQty);
+  }
+
+  decrementQuantity(item: CartItem) {
+    item.decrementQuantity();
+    if (item.quantity === 0) {
+      this.removeFromCart(item)
+    } else {
+      this.computeCartTotals();
+    }
+  }
+
+  removeFromCart(cartItem: CartItem) {
+    const itemIndex = this.cartItems.findIndex(item => item.id === cartItem.id);
+    if (itemIndex > -1) {
+      this.cartItems.splice(itemIndex, 1);
+      this.computeCartTotals();
+    }
   }
 
   private existInCart(item: CartItem): boolean {
