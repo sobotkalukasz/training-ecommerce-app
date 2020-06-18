@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormBuilder } from '@angular/forms';
 import { CartService } from 'src/app/services/cart.service';
+import { CheckoutFormService } from 'src/app/services/checkout-form.service';
 
 @Component({
   selector: 'app-checkout',
@@ -11,10 +12,13 @@ export class CheckoutComponent implements OnInit {
 
   checkoutFormGroup: FormGroup;
 
+  creditCardMonths: number[] = [];
+  creditCardYears: number[] = [];
+
   totalPrice: number = 0;
   totalQty: number = 0;
 
-  constructor(private formBuilder: FormBuilder, private cartService: CartService) { }
+  constructor(private formBuilder: FormBuilder, private cartService: CartService, private checkoutFormService: CheckoutFormService) { }
 
   ngOnInit(): void {
 
@@ -48,6 +52,12 @@ export class CheckoutComponent implements OnInit {
       })
     });
 
+    this.subscribeForCartData();
+    this.subscribeForFormMonths(this.getCurrentMonth());
+    this.subscribeForFormYears();
+  }
+
+  private subscribeForCartData() {
     this.cartService.totalPrice.subscribe(
       data => this.totalPrice = data
     );
@@ -57,6 +67,22 @@ export class CheckoutComponent implements OnInit {
     );
 
     this.cartService.computeCartTotals();
+  }
+
+  private getCurrentMonth(): number {
+    return new Date().getMonth() + 1;
+  }
+
+  private subscribeForFormMonths(startMonth: number) {
+    this.checkoutFormService.getCreditCardMonths(startMonth).subscribe(
+      data => this.creditCardMonths = data
+    );
+  }
+
+  private subscribeForFormYears() {
+    this.checkoutFormService.getCreditCardYear().subscribe(
+      data => this.creditCardYears = data
+    );
   }
 
   onSubmit() {
@@ -73,6 +99,20 @@ export class CheckoutComponent implements OnInit {
     } else {
       this.checkoutFormGroup.controls.billingAddress.reset();
     }
+  }
+
+  handleMonthAndYears() {
+    const creditCardFormGroup = this.checkoutFormGroup.get('creditCard');
+    const currentYear: number = new Date().getFullYear();
+    const selectedYear: number = Number(creditCardFormGroup.value.expirationYear);
+
+    let startMonth: number;
+    if (currentYear === selectedYear) {
+      startMonth = this.getCurrentMonth();
+    } else {
+      startMonth = 1;
+    }
+    this.subscribeForFormMonths(startMonth);
   }
 
 }
